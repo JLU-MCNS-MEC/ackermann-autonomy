@@ -30,7 +30,7 @@ JSON 汇总和同名 CSV 原始数据。
 ## 运行方法
 
 ```bash
-ros2 launch ackermann_line_following_bringup \
+ros2 launch ackermann_simulation \
   static_map_scenarios.launch.py \
   scenario:=unknown_obstacle \
   record_experiment:=true \

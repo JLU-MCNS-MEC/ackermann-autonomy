@@ -17,7 +17,7 @@ export ROS_DOMAIN_ID=47
 有桌面显示时启动 Gazebo 和 RViz：
 
 ```zsh
-ros2 launch ackermann_line_following_bringup nav2_waypoint_nav.launch.py \
+ros2 launch ackermann_simulation nav2_waypoint_nav.launch.py \
   send_waypoints:=true use_rviz:=true use_rqt_plots:=true
 ```
 
@@ -26,9 +26,9 @@ ros2 launch ackermann_line_following_bringup nav2_waypoint_nav.launch.py \
 无桌面显示时使用完整 world 路径启动服务器，另开终端查看话题：
 
 ```zsh
-ros2 launch ackermann_line_following_bringup nav2_waypoint_nav.launch.py \
+ros2 launch ackermann_simulation nav2_waypoint_nav.launch.py \
   send_waypoints:=true use_rviz:=false \
-  gz_args:='-r -s /home/xqiao/Workspace/ackermann_ros2_ws/install/ackermann_line_following_description/share/ackermann_line_following_description/worlds/waypoint_obstacle.sdf'
+  gz_args:='-r -s /home/xqiao/Workspace/ackermann_ros2_ws/install/ackermann_description/share/ackermann_description/worlds/waypoint_obstacle.sdf'
 
 ros2 topic echo /model/ackermann_car/odometry
 ros2 topic echo /plan
@@ -36,10 +36,10 @@ ros2 topic echo /cmd_vel_nav
 ros2 topic echo /model/ackermann_car/cmd_vel
 ```
 
-默认路线在 [nav2_trajectory.csv](../src/ackermann_line_following_controller/config/nav2_trajectory.csv)，包含起点 `(-3.5, 0)`、障碍前下侧检查点 `(-1.5, -0.9)` 和终点 `(3.5, 0)`。Smac Hybrid-A* 会根据实时雷达代价地图为后一个路段选择绕障侧向路径；检查点向下偏置是为了让重复测试保持在地图安全走廊内，同时没有把最终绕行轨迹写死。发送器也可以单独运行；现在不传 `waypoint_file` 时会自动使用安装包中的默认路线：
+默认路线在 [nav2_trajectory.csv](../src/ackermann_autonomy/config/nav2_trajectory.csv)，包含起点 `(-3.5, 0)`、障碍前下侧检查点 `(-1.5, -0.9)` 和终点 `(3.5, 0)`。Smac Hybrid-A* 会根据实时雷达代价地图为后一个路段选择绕障侧向路径；检查点向下偏置是为了让重复测试保持在地图安全走廊内，同时没有把最终绕行轨迹写死。发送器也可以单独运行；现在不传 `waypoint_file` 时会自动使用安装包中的默认路线：
 
 ```zsh
-ros2 run ackermann_line_following_controller nav2_waypoint_sender
+ros2 run ackermann_autonomy nav2_waypoint_sender
 ```
 
 ## 当前导航架构
@@ -97,7 +97,7 @@ odom ── base_footprint ── base_link ── lidar_link / rgbd_optical_fra
 动力学实例使用独立的开放场地和真实模型里程计，按顺序验收直行、左右转、刹车、倒车直行、倒车左右转和最终停车。运行命令如下：
 
 ```zsh
-ros2 launch ackermann_line_following_bringup dynamics_test.launch.py \
+ros2 launch ackermann_simulation dynamics_test.launch.py \
   use_rviz:=true
 ```
 
@@ -114,15 +114,15 @@ ros2 launch ackermann_line_following_bringup dynamics_test.launch.py \
 | `complex_static` | 30×20 m、9 个路线点 | 大地图、长距离、连续转向与多障碍性能 |
 
 ```zsh
-ros2 launch ackermann_line_following_bringup static_map_scenarios.launch.py \
+ros2 launch ackermann_simulation static_map_scenarios.launch.py \
   scenario:=straight use_rviz:=true
-ros2 launch ackermann_line_following_bringup static_map_scenarios.launch.py \
+ros2 launch ackermann_simulation static_map_scenarios.launch.py \
   scenario:=obstacle use_rviz:=true
-ros2 launch ackermann_line_following_bringup static_map_scenarios.launch.py \
+ros2 launch ackermann_simulation static_map_scenarios.launch.py \
   scenario:=offset use_rviz:=true
-ros2 launch ackermann_line_following_bringup static_map_scenarios.launch.py \
+ros2 launch ackermann_simulation static_map_scenarios.launch.py \
   scenario:=unknown_obstacle use_rviz:=true
-ros2 launch ackermann_line_following_bringup static_map_scenarios.launch.py \
+ros2 launch ackermann_simulation static_map_scenarios.launch.py \
   scenario:=complex_static use_rviz:=true
 ```
 

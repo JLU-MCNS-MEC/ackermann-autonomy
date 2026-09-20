@@ -7,7 +7,7 @@ AMCL。几何场景名字仅用于评估，不向语义导航提供位置。
 ## 使用已经保存的演示地图
 
 ```bash
-ros2 launch ackermann_line_following_bringup indoor_semantic.launch.py use_rviz:=true
+ros2 launch ackermann_simulation indoor_semantic.launch.py use_rviz:=true
 ```
 
 在 RViz 的 `2D Pose Estimate` 中给出地图左下侧建图起点附近的粗略位姿，再用
@@ -27,7 +27,7 @@ ros2 launch ackermann_line_following_bringup indoor_semantic.launch.py use_rviz:
 ## 1. 在线建图
 
 ```bash
-ros2 launch ackermann_line_following_bringup indoor_navigation.launch.py
+ros2 launch ackermann_simulation indoor_navigation.launch.py
 ```
 
 默认无界面运行 Gazebo；需要桌面显示时加 `use_rviz:=true`。在 RViz 的 `map`
@@ -59,7 +59,7 @@ ros2 service call /slam_toolbox/serialize_map slam_toolbox/srv/SerializePoseGrap
 栅格地图供 AMCL 导航，pose graph 用于后续继续建图。退出建图 launch 后再启动：
 
 ```bash
-ros2 launch ackermann_line_following_bringup indoor_navigation.launch.py \
+ros2 launch ackermann_simulation indoor_navigation.launch.py \
   mode:=amcl map_file:=/tmp/indoor_map.yaml
 ```
 
@@ -72,7 +72,7 @@ AMCL 不会自动知道车辆在旧地图中的出生位置。不应同时运行
 完成定位并把车辆导航到希望停靠的位置，然后记录实际 `map -> base_footprint`：
 
 ```bash
-ros2 run ackermann_line_following_controller semantic_navigation \
+ros2 run ackermann_autonomy semantic_navigation \
   --map /tmp/indoor_map.yaml --database /tmp/indoor_landmarks.json \
   --record '办公桌旁' --alias '办公区' --ros-args -p use_sim_time:=true
 ```
@@ -84,7 +84,7 @@ ros2 run ackermann_line_following_controller semantic_navigation \
 启动命名导航服务：
 
 ```bash
-ros2 run ackermann_line_following_controller semantic_navigation \
+ros2 run ackermann_autonomy semantic_navigation \
   --map /tmp/indoor_map.yaml --database /tmp/indoor_landmarks.json \
   --ros-args -p use_sim_time:=true
 ros2 topic pub --once /semantic_goal std_msgs/msg/String "{data: '办公桌旁'}"

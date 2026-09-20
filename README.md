@@ -1,4 +1,8 @@
-# Ackermann 小车循迹仿真
+# Ackermann Autonomy
+
+面向 Ackermann 车辆的 ROS 2 Jazzy 自主导航工程，同一套平台无关算法分别用于 Gazebo
+仿真验证和实机驱动/算法测试。工程采用单仓库、多包结构；包边界、依赖方向和拆仓条件见
+[架构说明](docs/architecture.md)。
 
 百平方米在线建图、AMCL 定位与命名语义目标导航见
 [室内语义导航使用说明](docs/indoor_semantic_navigation.md)，开发验收状态见
@@ -13,7 +17,15 @@
 
 后续会话请先阅读 [当前工程状态与会话交接](docs/project_handoff.md)。
 
-这是一个面向 Ubuntu 24.04 的 ROS 2 Jazzy + Gazebo Harmonic 示例。车辆模型、赛道、桥接和循迹控制分开，后续替换车型时不需要重写循迹节点。
+工程面向 Ubuntu 24.04、ROS 2 Jazzy 和 Gazebo Harmonic。车辆描述、平台无关算法、
+实机集成入口与仿真验证相互分离，替换车型或底盘驱动时不需要重写上层算法。
+
+## 工程结构
+
+- `ackermann_description`：共享车体、传感器和 TF 几何描述；
+- `ackermann_autonomy`：控制、导航、语义、视觉和诊断算法；
+- `ackermann_bringup`：实机控制边界与平台无关算法测试入口；
+- `ackermann_simulation`：Gazebo、bridge、仿真地图和自动回归场景。
 
 ## 启动
 
@@ -23,19 +35,26 @@ cd /home/xqiao/Workspace/ackermann_ros2_ws
 rosdep install --from-paths src --ignore-src -r -y
 colcon build --symlink-install
 source install/local_setup.zsh
-ros2 launch ackermann_line_following_bringup sim.launch.py
+ros2 launch ackermann_simulation sim.launch.py
+```
+
+实机或台架首先启动硬件无关的安全控制边界，底盘驱动订阅 `/drive`：
+
+```bash
+ros2 launch ackermann_bringup control_boundary.launch.py \
+  input_topic:=/cmd_vel_safe output_topic:=/drive
 ```
 
 默认会启动 Gazebo GUI、`ackermann_car`、圆角闭环赛道、相机、ROS-Gazebo bridge 和视觉 PID 循迹节点。屏幕演示可以把速度降到 `0.10 m/s`：
 
 ```bash
-ros2 launch ackermann_line_following_bringup sim.launch.py line_speed:=0.10
+ros2 launch ackermann_simulation sim.launch.py line_speed:=0.10
 ```
 
 感知导航实例使用 Nav2 的 Smac Hybrid-A*、Regulated Pure Pursuit、costmap 和 Collision Monitor：
 
 ```bash
-ros2 launch ackermann_line_following_bringup nav2_waypoint_nav.launch.py \
+ros2 launch ackermann_simulation nav2_waypoint_nav.launch.py \
   send_waypoints:=true use_rviz:=true use_rqt_plots:=true
 ```
 
@@ -46,7 +65,7 @@ ros2 launch ackermann_line_following_bringup nav2_waypoint_nav.launch.py \
 需要量化导航效果时启用实验记录器：
 
 ```bash
-ros2 launch ackermann_line_following_bringup \
+ros2 launch ackermann_simulation \
   static_map_scenarios.launch.py \
   scenario:=unknown_obstacle record_experiment:=true \
   experiment_result_file:=/tmp/unknown_obstacle.json
@@ -90,7 +109,7 @@ ros2 topic pub --once /cmd_ackermann ackermann_msgs/msg/AckermannDriveStamped \
 将新的 URDF/Xacro 文件传给同一个 launch：
 
 ```bash
-ros2 launch ackermann_line_following_bringup sim.launch.py \
+ros2 launch ackermann_simulation sim.launch.py \
   robot_description_file:=/absolute/path/to/your_car.urdf.xacro
 ```
 

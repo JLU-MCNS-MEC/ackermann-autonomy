@@ -52,7 +52,7 @@ ROS 2 Control 的
 ## 3. 本次新增的实车命令边界
 
 ```bash
-ros2 launch ackermann_line_following_bringup sim2real_control.launch.py \
+ros2 launch ackermann_bringup control_boundary.launch.py \
   input_topic:=/cmd_vel_safe output_topic:=/drive \
   wheelbase:=0.56 max_speed:=0.30 max_steering:=0.55
 ```
@@ -104,7 +104,7 @@ ros2 launch ackermann_line_following_bringup sim2real_control.launch.py \
 仿真 IMU 和第一版 EKF 配置现已加入，可独立回归：
 
 ```bash
-ros2 launch ackermann_line_following_bringup ekf_localization_test.launch.py
+ros2 launch ackermann_simulation ekf_localization_test.launch.py
 ros2 topic hz /imu/data_raw
 ros2 topic hz /odometry/filtered
 ros2 run tf2_ros tf2_echo odom base_footprint
@@ -117,7 +117,7 @@ ros2 run tf2_ros tf2_echo odom base_footprint
 也可以让静态地图导航直接使用 EKF 里程计进行回归：
 
 ```bash
-ros2 launch ackermann_line_following_bringup static_map_scenarios.launch.py \
+ros2 launch ackermann_simulation static_map_scenarios.launch.py \
   scenario:=straight use_ekf_localization:=true record_experiment:=true
 ```
 

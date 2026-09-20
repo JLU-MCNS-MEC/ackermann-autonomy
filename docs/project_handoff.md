@@ -1,6 +1,21 @@
 # 工程状态与会话交接
 
-更新时间：2026-09-10。
+更新时间：2026-09-20。
+
+## 工程重命名与分层
+
+- 项目名称已从单一“循迹仿真”调整为 `Ackermann Autonomy`，建议 GitHub 仓库名改为
+  `ackermann-autonomy`；当前 `origin` 仍指向旧远端名称，等待仓库所有者在 GitHub
+  完成重命名。
+- ROS 2 包已按职责改为 `ackermann_description`、`ackermann_autonomy`、
+  `ackermann_bringup` 和 `ackermann_simulation`。Gazebo world 已从共享描述包移入
+  仿真包，平台无关的控制边界和视觉算法测试入口位于 `ackermann_bringup`。
+- 当前不拆成两个 GitHub 仓库。只有驱动需要独立版本/权限、被多个项目复用、受 SDK
+  许可证约束或已有独立硬件在环测试时，再拆出硬件驱动仓库。详细边界见
+  [`architecture.md`](architecture.md)。
+- 这是包与启动入口重构，不代表已经接入真实 CAN/串口底盘驱动。使用系统 Python 的
+  独立安装空间完成 4 包构建；迁移后共 171 项测试通过，0 errors、0 failures、
+  0 skipped。
 
 ## 当前可视化会话与最新验收
 
@@ -71,7 +86,7 @@
 - 命名地标已记录入口、中央通道、办公桌旁，明确标记 `manual_pose` 来源；
   三个别名目标实际连续成功，49.52 s、43.12 s、30.71 s。未知、歧义、不可达与取消
   路径已运行验证；不能描述为自动视觉识别或三维语义建图。
-- 一体启动：`ros2 launch ackermann_line_following_bringup indoor_semantic.launch.py`；
+- 一体启动：`ros2 launch ackermann_simulation indoor_semantic.launch.py`；
   用户仍需通过 `/initialpose` 或 RViz 给 AMCL 粗略初始位姿。
 - 使用说明见 [`indoor_semantic_navigation.md`](indoor_semantic_navigation.md)。
   语义模块 35 项测试，覆盖率 95.15%；最终全量 88 项测试通过，0 errors、0 failures、
@@ -87,7 +102,8 @@
 
 ## 仓库状态
 
-- 公共仓库：`JLU-MCNS-MEC/ros2-ackermann-simulation`
+- 公共仓库：`JLU-MCNS-MEC/ros2-ackermann-simulation`（建议改名为
+  `JLU-MCNS-MEC/ackermann-autonomy`）
 - 默认分支：`main`
 - 当前功能基线：`81a828f`，由 PR #10 合并
 - PR #10：Sim2Real 控制边界、仿真 IMU、EKF 定位路径与诊断修复
@@ -167,16 +183,17 @@ localization 模式发布 `map -> odom`。移除测试用静态 `map_to_odom` �
 cd /home/xqiao/Workspace/ackermann_ros2_ws
 source /opt/ros/jazzy/setup.zsh
 colcon build --symlink-install --packages-select \
-  ackermann_line_following_description \
-  ackermann_line_following_controller \
-  ackermann_line_following_bringup
+  ackermann_description \
+  ackermann_autonomy \
+  ackermann_bringup \
+  ackermann_simulation
 source install/setup.zsh
 ```
 
 运行带 Gazebo 和 RViz 的 EKF 静态导航：
 
 ```bash
-ros2 launch ackermann_line_following_bringup \
+ros2 launch ackermann_simulation \
   static_map_scenarios.launch.py \
   scenario:=straight use_ekf_localization:=true use_rviz:=true
 ```
@@ -184,7 +201,7 @@ ros2 launch ackermann_line_following_bringup \
 单独检查 EKF：
 
 ```bash
-ros2 launch ackermann_line_following_bringup ekf_localization_test.launch.py
+ros2 launch ackermann_simulation ekf_localization_test.launch.py
 ros2 topic hz /imu/data_raw
 ros2 topic hz /odometry/filtered
 ros2 run tf2_ros tf2_echo odom base_footprint
@@ -193,7 +210,7 @@ ros2 run tf2_ros tf2_echo odom base_footprint
 运行实车控制接口：
 
 ```bash
-ros2 launch ackermann_line_following_bringup sim2real_control.launch.py \
+ros2 launch ackermann_bringup control_boundary.launch.py \
   input_topic:=/cmd_vel_safe output_topic:=/drive \
   wheelbase:=0.56 max_speed:=0.30 max_steering:=0.55
 ```
@@ -202,8 +219,9 @@ ros2 launch ackermann_line_following_bringup sim2real_control.launch.py \
 
 ```bash
 colcon test --packages-select \
-  ackermann_line_following_description \
-  ackermann_line_following_controller \
-  ackermann_line_following_bringup
+  ackermann_description \
+  ackermann_autonomy \
+  ackermann_bringup \
+  ackermann_simulation
 colcon test-result --verbose
 ```

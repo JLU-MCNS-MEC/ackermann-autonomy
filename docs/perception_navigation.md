@@ -38,9 +38,9 @@ colcon build --symlink-install
 source install/local_setup.zsh
 export ROS_DOMAIN_ID=47
 export GZ_PARTITION=ackermann_sensor_test
-ros2 launch ackermann_line_following_bringup sim.launch.py \
+ros2 launch ackermann_simulation sim.launch.py \
   enable_line_follower:=false start_x:=0.0 start_y:=0.0 \
-  gz_args:="-r -s --headless-rendering $PWD/src/ackermann_line_following_description/worlds/sensor_lab.sdf"
+  gz_args:="-r -s --headless-rendering $PWD/src/ackermann_description/worlds/sensor_lab.sdf"
 ```
 
 终端二：

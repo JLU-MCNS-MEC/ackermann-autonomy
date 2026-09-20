@@ -8,7 +8,7 @@
 先使用保存地图启动，提供约 `(0.2, 0.2, 0)` 的初始位姿并等待 AMCL/Nav2 就绪：
 
 ```bash
-ros2 launch ackermann_line_following_bringup indoor_semantic.launch.py \
+ros2 launch ackermann_simulation indoor_semantic.launch.py \
   enable_rgbd:=false target_speed:=0.35 use_rviz:=true
 ```
 
@@ -27,8 +27,8 @@ ros2 bag record --storage mcap --use-sim-time --disable-keyboard-controls \
   /cmd_vel_nav /cmd_vel_smoothed /cmd_vel_safe /drive /collision_monitor_state \
   /plan /diagnostics
 
-ros2 run ackermann_line_following_controller navigation_regression \
-  --route src/ackermann_line_following_controller/config/indoor_regression.json \
+ros2 run ackermann_autonomy navigation_regression \
+  --route src/ackermann_autonomy/config/indoor_regression.json \
   --output /tmp/experiment_unique/results.json --count 20 --timeout 150 --use-sim-time
 ```
 
@@ -48,10 +48,10 @@ ros2 run ackermann_line_following_controller navigation_regression \
 新会话必须重新定位；Gazebo GPU 相机不是在已有实体上仅改 ROS 参数就能启用。
 
 ```bash
-ros2 launch ackermann_line_following_bringup indoor_semantic.launch.py \
+ros2 launch ackermann_simulation indoor_semantic.launch.py \
   enable_rgbd:=true target_speed:=0.35 use_rviz:=true
 
-ros2 run ackermann_line_following_controller rgbd_audit \
+ros2 run ackermann_autonomy rgbd_audit \
   --output /tmp/rgbd_audit_unique.json --seconds 120 --minimum-samples 300 \
   --use-sim-time --reliable
 ```
@@ -84,11 +84,11 @@ ros2 run ackermann_line_following_controller rgbd_audit \
 启动 RGB-D、完成 AMCL 初始定位后，在另一个终端记录 Nav2 示范：
 
 ```bash
-ros2 launch ackermann_line_following_bringup visual_navigation.launch.py \
+ros2 launch ackermann_bringup visual_navigation.launch.py \
   mode:=record dataset:=/tmp/visual_dataset_unique rate:=5.0
 
-ros2 run ackermann_line_following_controller navigation_regression \
-  --route src/ackermann_line_following_controller/config/indoor_regression.json \
+ros2 run ackermann_autonomy navigation_regression \
+  --route src/ackermann_autonomy/config/indoor_regression.json \
   --output /tmp/visual_teacher_unique.json --count 5 --timeout 150 --use-sim-time
 ```
 
@@ -96,10 +96,10 @@ ros2 run ackermann_line_following_controller navigation_regression \
 正常按 Ctrl+C 结束记录后，训练只用于验证接口的小型模型：
 
 ```bash
-ros2 run ackermann_line_following_controller visual_policy_train \
+ros2 run ackermann_autonomy visual_policy_train \
   --dataset /tmp/visual_dataset_unique --model /tmp/visual_policy.yml
 
-ros2 launch ackermann_line_following_bringup visual_navigation.launch.py \
+ros2 launch ackermann_bringup visual_navigation.launch.py \
   mode:=shadow model:=/tmp/visual_policy.yml \
   metrics:=/tmp/visual_shadow_metrics.json rate:=5.0
 ```
