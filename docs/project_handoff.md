@@ -4,9 +4,8 @@
 
 ## 工程重命名与分层
 
-- 项目名称已从单一“循迹仿真”调整为 `Ackermann Autonomy`，建议 GitHub 仓库名改为
-  `ackermann-autonomy`；当前 `origin` 仍指向旧远端名称，等待仓库所有者在 GitHub
-  完成重命名。
+- 项目名称已从单一“循迹仿真”调整为 `Ackermann Autonomy`，GitHub 仓库已重命名为
+  `JLU-MCNS-MEC/ackermann-autonomy`，本地 `origin` 已同步更新。
 - ROS 2 包已按职责改为 `ackermann_description`、`ackermann_autonomy`、
   `ackermann_bringup` 和 `ackermann_simulation`。Gazebo world 已从共享描述包移入
   仿真包，平台无关的控制边界和视觉算法测试入口位于 `ackermann_bringup`。
@@ -102,8 +101,7 @@
 
 ## 仓库状态
 
-- 公共仓库：`JLU-MCNS-MEC/ros2-ackermann-simulation`（建议改名为
-  `JLU-MCNS-MEC/ackermann-autonomy`）
+- 公共仓库：`JLU-MCNS-MEC/ackermann-autonomy`
 - 默认分支：`main`
 - 当前功能基线：`81a828f`，由 PR #10 合并
 - PR #10：Sim2Real 控制边界、仿真 IMU、EKF 定位路径与诊断修复
