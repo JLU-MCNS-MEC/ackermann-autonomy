@@ -1,0 +1,25 @@
+chassis_driver:
+  ros__parameters:
+    can_interface: can0
+    ds20270c_node_id: 1
+    pwm_controller_hint: 32c0000.pwm
+    pwm_channel: 0
+    command_topic: /drive
+    odometry_topic: /wheel/odometry
+    odom_frame: odom
+    base_frame: base_footprint
+    wheel_diameter: 0.169
+    track_width: 0.40
+    wheelbase: 0.56
+    max_motor_rpm: 300.0
+    left_motor_invert: false
+    right_motor_invert: true
+    servo_center_deg: 150.0
+    servo_scale_deg_per_rad: 57.29577951308232
+    max_steering: 0.55
+    steering_rate_limit: 3.141592653589793
+    command_timeout: 0.30
+    feedback_rate: 20.0
+    feedback_timeout: 0.50
+    diagnostics_rate: 2.0
+    enable_on_start: false

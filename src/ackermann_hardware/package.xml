@@ -1,18 +1,21 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>ackermann_bringup</name>
+  <name>ackermann_hardware</name>
   <version>0.1.0</version>
-  <description>Hardware integration entry points for Ackermann Autonomy.</description>
+  <description>SocketCAN and PWM chassis driver for Jetson AGX Xavier.</description>
   <maintainer email="xqiao@todo.todo">xqiao</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_python</buildtool_depend>
 
-  <exec_depend>ackermann_autonomy</exec_depend>
-  <exec_depend>ackermann_description</exec_depend>
-  <exec_depend>ackermann_hardware</exec_depend>
-  <exec_depend>launch</exec_depend>
-  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ackermann_msgs</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>diagnostic_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_srvs</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

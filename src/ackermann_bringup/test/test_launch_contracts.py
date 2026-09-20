@@ -74,3 +74,24 @@ def test_visual_navigation_rejects_bad_mode_and_model(tmp_path):
     context.launch_configurations['mode'] = 'shadow'
     with pytest.raises(FileNotFoundError, match='does not exist'):
         module._launch(context)
+
+
+def test_real_chassis_keeps_hardware_disabled_by_default():
+    module = launch_module('real_chassis')
+    description = module.generate_launch_description()
+    arguments = {
+        entity.name: entity
+        for entity in description.entities
+        if isinstance(entity, DeclareLaunchArgument)
+    }
+    assert {'can_interface', 'wheelbase', 'max_speed', 'max_steering',
+            'enable_on_start'} <= arguments.keys()
+    default = ''.join(
+        part.perform(LaunchContext())
+        for part in arguments['enable_on_start'].default_value
+    )
+    assert default == 'false'
+    text = (ROOT / 'launch' / 'real_chassis.launch.py').read_text()
+    assert "'input_topic': '/cmd_vel_safe'" in text
+    assert "'output_topic': '/drive'" in text
+    assert "package='ackermann_hardware'" in text

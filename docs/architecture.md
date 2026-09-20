@@ -15,15 +15,16 @@ Gazebo 仿真验证和实车集成，但两者只在明确的车辆接口处汇�
 | --- | --- | --- |
 | `ackermann_description` | 车体、传感器和 TF 几何描述 | ROS 2 描述工具 |
 | `ackermann_autonomy` | 控制适配、导航辅助、语义与视觉算法、诊断和测试节点 | ROS 2 通用消息与算法库 |
-| `ackermann_bringup` | 实机控制边界和平台无关算法测试入口 | `ackermann_description`、`ackermann_autonomy` |
+| `ackermann_hardware` | Jetson SocketCAN、DS20270C、PWM、轮速反馈与原始里程计 | Linux 硬件接口与 ROS 2 通用消息 |
+| `ackermann_bringup` | 实机控制边界和平台无关算法测试入口 | `ackermann_description`、`ackermann_autonomy`、`ackermann_hardware` |
 | `ackermann_simulation` | Gazebo world、bridge、仿真参数、地图、RViz 和回归场景 | 上述共享包、Gazebo、Nav2 |
 
 依赖方向必须保持单向：
 
 ```text
 ackermann_description ─┐
-                       ├─> ackermann_bringup ─> ackermann_simulation
-ackermann_autonomy ────┘             └────────> hardware driver（后续）
+ackermann_autonomy ────┼─> ackermann_bringup ─> ackermann_simulation
+ackermann_hardware ────┘
 ```
 
 `ackermann_autonomy` 不得依赖 Gazebo。实车驱动不得订阅 `/tf_ground_truth`，也不得绕过
@@ -46,8 +47,10 @@ Nav2 -> velocity_smoother -> Collision Monitor -> /cmd_vel_safe
      -> twist_to_ackermann -> /drive -> chassis driver
 ```
 
-底盘驱动后续应作为独立 ROS 2 包加入本仓库，至少发布轮式里程计、反馈状态和诊断，并
-实现命令超时停车。驱动包不得包含 Nav2、Gazebo 或算法实现。
+`ackermann_hardware` 已作为独立 ROS 2 Python 包加入本仓库，订阅 `/drive`，发布
+`/wheel/odometry`、`/joint_states` 和 `/diagnostics`，并实现命令超时停车。它不发布
+`odom -> base_footprint`，该 TF 仍由 `robot_localization` 独占。驱动包不得包含 Nav2、
+Gazebo 或上层算法实现。
 
 ## 何时拆分仓库
 

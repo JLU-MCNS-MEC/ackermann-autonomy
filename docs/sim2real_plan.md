@@ -1,6 +1,6 @@
 # Sim2Real 架构与验收路线
 
-更新日期：2026-09-07。本文件区分已经跑通的仿真能力、已实现但尚未接硬件的接口，
+更新日期：2026-09-20。本文件区分已经跑通的仿真能力、已实现但尚未接硬件的接口，
 以及必须在实车上测量的项目。不能用 Gazebo 真值或理想传感器数据代替实车验收。
 
 2026-09-10 补充：下文初始差距表是历史基线，二维 SLAM/AMCL 的最新状态以
@@ -11,9 +11,9 @@
 
 | 子系统 | 当前状态 | 实车前必须补齐 | 优先级 |
 | --- | --- | --- | --- |
-| 底盘 | Gazebo Ackermann 插件，已测前进、倒车、制动、转向 | 电机与舵机驱动、编码器读取、急停、上电零位、反馈故障码 | P0 |
-| 命令接口 | 已新增 `/cmd_vel_safe` → `/drive` 适配器，仿真执行端仍使用 Gazebo `Twist` | 接真实驱动或 `ros2_control` | P0 |
-| 局部里程计 | Nav2 可选用轮式里程计和仿真 IMU 的 EKF 输出 | 轮速/IMU 标定、真实协方差与故障注入 | P0 |
+| 底盘 | 已实现 Jetson SocketCAN + DS20270C 双轴协议和 PWM 舵机 Python 驱动，尚未上硬件 | 急停、上电零位、方向与故障码台架验收 | P0 |
+| 命令接口 | `/cmd_vel_safe` → `/drive` → `ackermann_hardware` 已接通 | 车轮离地验证与驱动器心跳验收 | P0 |
+| 局部里程计 | 驱动已发布 `/wheel/odometry`，仿真 EKF 已通过 | 真实轮速/IMU 标定、协方差与故障注入 | P0 |
 | 定位 | `map → odom` 为恒等静态 TF | 已知地图使用 AMCL 或 Slam Toolbox localization；定位器独占该 TF | P0 |
 | 雷达 | MID360 样式点云，无真实 Livox 时序/扫描模式 | `livox_ros_driver2`、PTP/硬同步、逐点时间、盲区和反射率测试 | P0 |
 | 安全 | Nav2 Collision Monitor 有减速/停车区 | 独立硬件急停、驱动心跳、传感器失联停车、人工遥控抢占 | P0 |
@@ -62,6 +62,18 @@ ros2 launch ackermann_bringup control_boundary.launch.py \
 非零低速仍保留曲率，避免安全减速后丢失转向；输入超过
 `0.25 s` 未更新时持续输出停车命令。真实驱动器还必须有独立、更底层的心跳和
 急停，不能只依赖 ROS 节点。
+
+Jetson 完整入口为：
+
+```bash
+ros2 run ackermann_hardware setup_can0.sh can0 500000
+ros2 launch ackermann_bringup real_chassis.launch.py
+ros2 service call /chassis_driver/enable std_srvs/srv/SetBool '{data: true}'
+```
+
+驱动采用 Python `rclpy` 与原生 SocketCAN。`20–50 Hz` 控制/反馈频率和经典 CAN
+带宽下，Python 开销相对 Linux 调度和 sysfs PWM 可忽略；它不承担电机电流或速度的
+硬实时闭环。DS20270C 必须工作在厂家内部速度模式，当前实现不兼容 CANopen 模式。
 
 ## 4. 定位与建图选择
 

@@ -24,6 +24,7 @@
 
 - `ackermann_description`：共享车体、传感器和 TF 几何描述；
 - `ackermann_autonomy`：控制、导航、语义、视觉和诊断算法；
+- `ackermann_hardware`：Jetson SocketCAN、DS20270C 和 PWM 实车驱动；
 - `ackermann_bringup`：实机控制边界与平台无关算法测试入口；
 - `ackermann_simulation`：Gazebo、bridge、仿真地图和自动回归场景。
 
@@ -38,12 +39,17 @@ source install/local_setup.zsh
 ros2 launch ackermann_simulation sim.launch.py
 ```
 
-实机或台架首先启动硬件无关的安全控制边界，底盘驱动订阅 `/drive`：
+Jetson 实机或台架使用完整控制入口，默认保持电机失能：
 
 ```bash
-ros2 launch ackermann_bringup control_boundary.launch.py \
-  input_topic:=/cmd_vel_safe output_topic:=/drive
+ros2 run ackermann_hardware setup_can0.sh can0 500000
+ros2 launch ackermann_bringup real_chassis.launch.py
+ros2 service call /chassis_driver/enable std_srvs/srv/SetBool '{data: true}'
 ```
+
+驱动操作说明与 DS20270C 模式要求见
+[`ackermann_hardware/README.md`](src/ackermann_hardware/README.md)。当前只完成 Linux、
+ROS 2 和 mock I/O 验证，实际左右轮方向、舵机中位、PWM pinmux 与硬件急停仍须台架验收。
 
 默认会启动 Gazebo GUI、`ackermann_car`、圆角闭环赛道、相机、ROS-Gazebo bridge 和视觉 PID 循迹节点。屏幕演示可以把速度降到 `0.10 m/s`：
 

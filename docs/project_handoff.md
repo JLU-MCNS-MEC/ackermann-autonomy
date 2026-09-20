@@ -7,14 +7,27 @@
 - 项目名称已从单一“循迹仿真”调整为 `Ackermann Autonomy`，GitHub 仓库已重命名为
   `JLU-MCNS-MEC/ackermann-autonomy`，本地 `origin` 已同步更新。
 - ROS 2 包已按职责改为 `ackermann_description`、`ackermann_autonomy`、
-  `ackermann_bringup` 和 `ackermann_simulation`。Gazebo world 已从共享描述包移入
-  仿真包，平台无关的控制边界和视觉算法测试入口位于 `ackermann_bringup`。
+  `ackermann_hardware`、`ackermann_bringup` 和 `ackermann_simulation`。Gazebo world
+  已从共享描述包移入仿真包，平台无关的控制边界位于 `ackermann_bringup`。
 - 当前不拆成两个 GitHub 仓库。只有驱动需要独立版本/权限、被多个项目复用、受 SDK
   许可证约束或已有独立硬件在环测试时，再拆出硬件驱动仓库。详细边界见
   [`architecture.md`](architecture.md)。
-- 这是包与启动入口重构，不代表已经接入真实 CAN/串口底盘驱动。使用系统 Python 的
-  独立安装空间完成 4 包构建；迁移后共 171 项测试通过，0 errors、0 failures、
-  0 skipped。
+- 当前 5 包在系统 Python 独立安装空间构建成功；全量 193 项测试通过，0 errors、
+  0 failures、0 skipped。硬件包单元测试覆盖率 87%。
+
+## Jetson 实车底盘驱动
+
+- 新增纯 Python `ackermann_hardware` 包，将 Downloads 中的 Linux C++ 原型改为
+  `rclpy + SocketCAN + PWM sysfs`。驱动订阅 `/drive`，发布 `/wheel/odometry`、
+  `/joint_states` 和 `/diagnostics`，不发布 TF。
+- DS20270C 当前使用厂家双轴内部速度协议，要求 `F0.1.002 = 1`、`F1.1.002 = 1`；
+  默认 CAN ID 为 `0x601/0x581`、波特率建议先用 500 kbps。CANopen 模式尚未实现。
+- `real_chassis.launch.py` 已连接既有安全控制边界与实车驱动。电机默认失能，需调用
+  `/chassis_driver/enable`；300 ms 命令 watchdog 会令轮速归零并逐步回正。
+- Python 性能满足当前 20–50 Hz 目标下发与反馈读取；电机速度硬实时闭环仍在
+  DS20270C 内部完成。独立硬件急停、驱动心跳与 Jetson 实时调度仍是必要安全层。
+- 本机只完成构建、mock CAN/PWM 单元测试和 launch 契约验证。PWM pinmux、左右轮方向、
+  舵机中位、负载反馈语义和实车里程计尚未在 AGX Xavier 台架验收，不能标记为实车完成。
 
 ## 当前可视化会话与最新验收
 
@@ -183,6 +196,7 @@ source /opt/ros/jazzy/setup.zsh
 colcon build --symlink-install --packages-select \
   ackermann_description \
   ackermann_autonomy \
+  ackermann_hardware \
   ackermann_bringup \
   ackermann_simulation
 source install/setup.zsh
@@ -208,9 +222,9 @@ ros2 run tf2_ros tf2_echo odom base_footprint
 运行实车控制接口：
 
 ```bash
-ros2 launch ackermann_bringup control_boundary.launch.py \
-  input_topic:=/cmd_vel_safe output_topic:=/drive \
-  wheelbase:=0.56 max_speed:=0.30 max_steering:=0.55
+ros2 run ackermann_hardware setup_can0.sh can0 500000
+ros2 launch ackermann_bringup real_chassis.launch.py
+ros2 service call /chassis_driver/enable std_srvs/srv/SetBool '{data: true}'
 ```
 
 回归测试：
@@ -219,6 +233,7 @@ ros2 launch ackermann_bringup control_boundary.launch.py \
 colcon test --packages-select \
   ackermann_description \
   ackermann_autonomy \
+  ackermann_hardware \
   ackermann_bringup \
   ackermann_simulation
 colcon test-result --verbose
