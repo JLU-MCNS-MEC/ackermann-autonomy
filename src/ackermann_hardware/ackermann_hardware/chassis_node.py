@@ -86,9 +86,13 @@ class ChassisNode(Node):
             config.right_motor_invert,
         )
         if not self.controller.initialize(enable_on_start):
+            # The servo PWM may already be exported and enabled by a partial init, so cut
+            # the output before failing out rather than leaving the steering energized.
+            self.servo.disable()
             self.can.close()
             raise RuntimeError(
-                'chassis initialization failed; check DS20270C mode, PWM pinmux and permissions'
+                'chassis initialization failed; run '
+                'ros2 run ackermann_hardware hardware_preflight to isolate the cause'
             )
 
         self.odom_publisher = self.create_publisher(Odometry, self.odometry_topic, 10)

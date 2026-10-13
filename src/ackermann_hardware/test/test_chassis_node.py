@@ -140,3 +140,33 @@ def test_node_rejects_socket_open_failure(monkeypatch):
     with pytest.raises(RuntimeError, match='test failure'):
         module.ChassisNode()
     rclpy.shutdown()
+
+
+def test_controller_init_failure_disables_servo(monkeypatch):
+    created = []
+
+    class PreEnabledPwm(FakePwm):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            # Emulate a partial init that already enabled the steering output.
+            self.enabled = True
+            created.append(self)
+
+    class FailingController:
+        def __init__(self, *_args, **_kwargs):
+            pass
+
+        def initialize(self, _enable_on_start):
+            return False
+
+    FakeSocketCan.instances.clear()
+    monkeypatch.setattr(module, 'SocketCan', FakeSocketCan)
+    monkeypatch.setattr(module, 'SysfsPwm', PreEnabledPwm)
+    monkeypatch.setattr(module, 'ChassisController', FailingController)
+    if not rclpy.ok():
+        rclpy.init()
+    with pytest.raises(RuntimeError, match='hardware_preflight'):
+        module.ChassisNode()
+    assert created and created[-1].enabled is False
+    assert FakeSocketCan.instances[-1].closed
+    rclpy.shutdown()

@@ -15,8 +15,9 @@ setup(
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/config', glob(os.path.join('config', '*'))),
         ('share/' + package_name + '/launch', glob(os.path.join('launch', '*.py'))),
+        ('share/' + package_name + '/systemd', glob(os.path.join('systemd', '*'))),
         ('share/' + package_name, ['README.md']),
-        ('lib/' + package_name, ['scripts/setup_can0.sh']),
+        ('lib/' + package_name, glob(os.path.join('scripts', '*.sh'))),
     ],
     install_requires=['setuptools'],
     tests_require=['pytest'],
@@ -26,6 +27,7 @@ setup(
     entry_points={
         'console_scripts': [
             'chassis_node = ackermann_hardware.chassis_node:main',
+            'hardware_preflight = ackermann_hardware.preflight:main',
         ],
     },
 )

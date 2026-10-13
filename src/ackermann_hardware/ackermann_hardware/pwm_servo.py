@@ -129,6 +129,10 @@ class ServoDriver:
             and self._pwm.enable(True)
         )
 
+    def disable(self) -> bool:
+        """Cut the PWM output so the steering servo goes unpowered."""
+        return self._pwm.enable(False)
+
     def set_angle_limits(self, minimum_deg: float, maximum_deg: float) -> None:
         minimum = min(max(minimum_deg, self.ANGLE_MIN_DEG), self.ANGLE_MAX_DEG)
         maximum = min(max(maximum_deg, self.ANGLE_MIN_DEG), self.ANGLE_MAX_DEG)

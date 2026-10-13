@@ -1,0 +1,15 @@
+[Unit]
+Description=Ackermann chassis CAN interface (Jetson mttcan)
+Documentation=file://@SHARE_DIR@/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+EnvironmentFile=-/etc/default/ackermann-can
+ExecStart=/usr/bin/env bash @SETUP_CAN_SCRIPT@ ${CAN_INTERFACE} ${CAN_BITRATE}
+ExecStop=-/bin/sh -c 'exec ip link set "${CAN_INTERFACE}" down'
+
+[Install]
+WantedBy=multi-user.target
