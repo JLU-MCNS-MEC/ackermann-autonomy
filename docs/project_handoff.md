@@ -1,6 +1,6 @@
 # 工程状态与会话交接
 
-更新时间：2026-09-20。
+更新时间：2026-10-13。
 
 ## 工程重命名与分层
 
@@ -26,8 +26,21 @@
   `/chassis_driver/enable`；300 ms 命令 watchdog 会令轮速归零并逐步回正。
 - Python 性能满足当前 20–50 Hz 目标下发与反馈读取；电机速度硬实时闭环仍在
   DS20270C 内部完成。独立硬件急停、驱动心跳与 Jetson 实时调度仍是必要安全层。
-- 本机只完成构建、mock CAN/PWM 单元测试和 launch 契约验证。PWM pinmux、左右轮方向、
-  舵机中位、负载反馈语义和实车里程计尚未在 AGX Xavier 台架验收，不能标记为实车完成。
+- 本机只完成构建、mock CAN/PWM 单元测试和 launch 契约验证。
+- 2026-10-13 在真实 AGX Xavier 上完成硬件层验证：`mttcan` 模块存在但开机不加载；
+  参考载板设备树已正确配置 CAN0 与 PWM pinmux，实测无需 Jetson-IO；`can0` 可配置到
+  500 kbps 并进入 `ERROR-ACTIVE`；PWM 控制器 `32c0000.pwm` 对应 `pwmchip2` 与引脚 18，
+  实测可输出 50 Hz 且权限满足免 sudo。同时确认开发板没有板载 CAN 收发器，必须外接
+  3.3 V 收发器才能接总线。
+- 新增 `ackermann-can` systemd 服务与一次性安装脚本，开机自动加载 `mttcan` 并配置接口，
+  使 launch 不再需要 sudo；新增 `hardware_preflight` 自检工具与
+  [`jetson_hardware_setup.md`](jetson_hardware_setup.md) 硬件参考文档；`setup_can0.sh`
+  改为 root 感知并补齐模块预检、接口出现检查与收发器提示。
+- 仍待台架验收：总线实际连通性、左右轮方向、舵机中位、负载反馈语义与实车里程计，
+  不能标记为实车完成。
+- 已确认的阻塞：本包是 ROS 2 Jazzy 包且使用 Python 3.10 以上的类型注解语法，而目标
+  Jetson 最高只能到 JetPack 5.1.7（Ubuntu 20.04，对应已停止维护的 ROS 2 Foxy），
+  因此驱动目前无法直接运行在该机器上，真机运行方案尚未确定。
 
 ## 当前可视化会话与最新验收
 

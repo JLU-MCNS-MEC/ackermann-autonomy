@@ -30,6 +30,8 @@
 
 ## 启动
 
+### 仿真
+
 ```bash
 source /opt/ros/jazzy/setup.zsh
 cd /home/xqiao/Workspace/ackermann_ros2_ws
@@ -39,19 +41,8 @@ source install/local_setup.zsh
 ros2 launch ackermann_simulation sim.launch.py
 ```
 
-Jetson 实机或台架使用完整控制入口，默认保持电机失能：
-
-```bash
-ros2 run ackermann_hardware setup_can0.sh can0 500000
-ros2 launch ackermann_bringup real_chassis.launch.py
-ros2 service call /chassis_driver/enable std_srvs/srv/SetBool '{data: true}'
-```
-
-驱动操作说明与 DS20270C 模式要求见
-[`ackermann_hardware/README.md`](src/ackermann_hardware/README.md)。当前只完成 Linux、
-ROS 2 和 mock I/O 验证，实际左右轮方向、舵机中位、PWM pinmux 与硬件急停仍须台架验收。
-
-默认会启动 Gazebo GUI、`ackermann_car`、圆角闭环赛道、相机、ROS-Gazebo bridge 和视觉 PID 循迹节点。屏幕演示可以把速度降到 `0.10 m/s`：
+默认会启动 Gazebo GUI、`ackermann_car`、圆角闭环赛道、相机、ROS-Gazebo bridge 和
+视觉 PID 循迹节点。屏幕演示可以把速度降到 `0.10 m/s`：
 
 ```bash
 ros2 launch ackermann_simulation sim.launch.py line_speed:=0.10
@@ -64,9 +55,17 @@ ros2 launch ackermann_simulation nav2_waypoint_nav.launch.py \
   send_waypoints:=true use_rviz:=true use_rqt_plots:=true
 ```
 
-导航启动会关闭视觉循迹和未使用的 RGB-D 渲染，确保只有 Nav2 向底盘发布速度。MID-360 PointCloud2 直接进入全局和局部 VoxelLayer，并投影为 `/scan_nav` 供 Collision Monitor 使用。`use_rqt_plots:=true` 会打开实时速度曲线和导航判断曲线，RViz 车体上方同步显示速度、转角、障碍距离、路径误差和安全动作。默认场景在不含内部障碍的地图上感知 Gazebo 中的未知箱体，绕行后在终点停车；传感器、TF、故障定位和开源方案比较见 [感知测试与导航路线](docs/perception_navigation.md)。
+导航启动会关闭视觉循迹和未使用的 RGB-D 渲染，确保只有 Nav2 向底盘发布速度。MID-360
+PointCloud2 直接进入全局和局部 VoxelLayer，并投影为 `/scan_nav` 供 Collision Monitor
+使用。`use_rqt_plots:=true` 会打开实时速度曲线和导航判断曲线，RViz 车体上方同步显示
+速度、转角、障碍距离、路径误差和安全动作。默认场景在不含内部障碍的地图上感知 Gazebo
+中的未知箱体，绕行后在终点停车；传感器、TF、故障定位和开源方案比较见
+[感知测试与导航路线](docs/perception_navigation.md)。
 
-完整的前进、倒车、刹车和转向验收，以及短直线、已知障碍、未知障碍和偏置终点四种静态地图场景，见 [Nav2 轨迹点与激光避障说明](docs/waypoint_obstacle_avoidance.md)。动力学测试会把实际模型里程计写入 `/tmp/ackermann_dynamics_result.json`，并在 RViz 显示实测轨迹。
+完整的前进、倒车、刹车和转向验收，以及短直线、已知障碍、未知障碍和偏置终点四种静态
+地图场景，见 [Nav2 轨迹点与激光避障说明](docs/waypoint_obstacle_avoidance.md)。动力学
+测试会把实际模型里程计写入 `/tmp/ackermann_dynamics_result.json`，并在 RViz 显示实测
+轨迹。
 
 需要量化导航效果时启用实验记录器：
 
@@ -81,6 +80,28 @@ ros2 launch ackermann_simulation \
 速度跟踪 RMSE、最小障碍净空和避障决策次数。四场景实测结果见
 [静态场景导航基线](docs/experiments/static_navigation_baseline.md)。
 
+### 实机与台架
+
+Jetson 实机或台架使用完整控制入口，默认保持电机失能：
+
+```bash
+ros2 run ackermann_hardware hardware_preflight
+ros2 run ackermann_hardware setup_can0.sh can0 500000
+ros2 launch ackermann_bringup real_chassis.launch.py
+ros2 service call /chassis_driver/enable std_srvs/srv/SetBool '{data: true}'
+```
+
+硬件接线、40 针映射、CAN 收发器要求和台架排查见
+[Jetson 硬件接线与台架准备](docs/jetson_hardware_setup.md)；驱动操作说明与 DS20270C
+模式要求见 [`ackermann_hardware/README.md`](src/ackermann_hardware/README.md)。
+
+当前只完成 Linux、ROS 2 和 mock I/O 验证，以及 CAN 接口启用、PWM 输出与 pinmux 的
+本机验证。实际左右轮方向、舵机中位、总线连通性与硬件急停仍须台架验收。底盘驱动建立在
+ROS 2 Jazzy 上，而目标 Jetson 最高只能到 JetPack 5.1.7，真机运行方案尚未确定，详见
+[运行环境说明](src/ackermann_hardware/README.md#运行环境)。
+
+### 辅助工具
+
 查看相机画面可以另开终端执行：
 
 ```bash
@@ -89,7 +110,9 @@ source /home/xqiao/Workspace/ackermann_ros2_ws/install/local_setup.zsh
 ros2 run rqt_image_view rqt_image_view /camera/image_raw
 ```
 
-如果当前终端激活了 Anaconda，ROS 依赖和 `colcon` 应使用系统 Python；新终端会自动优先使用 `/usr/bin/python3`，必要时可先执行 `conda deactivate` 再构建。
+如果当前终端激活了 Anaconda，ROS 依赖和 `colcon` 应使用系统 Python；新终端会自动优先
+使用 `/usr/bin/python3`，必要时可先执行 `conda deactivate` 再构建。构建前若换过 Python
+环境，建议先删除受影响包的 `build/<包名>` 目录，否则 CMake 会沿用缓存里的解释器路径。
 
 ## 检查话题
 
@@ -125,7 +148,8 @@ ros2 launch ackermann_simulation sim.launch.py \
 - 左右侧驱动轮关节：重复填写 `left_joint`、`right_joint`
 - 根据实际车身修改 `wheel_base`、`wheel_separation`、`kingpin_width`、`wheel_radius`
 
-循迹节点只依赖 `/camera/image_raw` 和 `/cmd_ackermann`，因此车体尺寸、外观和关节名称可以独立变化。若换车后相机话题不同，只需在 launch 中调整相机 bridge 和 `image_topic`。
+循迹节点只依赖 `/camera/image_raw` 和 `/cmd_ackermann`，因此车体尺寸、外观和关节名称
+可以独立变化。若换车后相机话题不同，只需在 launch 中调整相机 bridge 和 `image_topic`。
 
 ## 控制接口
 
@@ -133,4 +157,5 @@ ros2 launch ackermann_simulation sim.launch.py \
 
 `angular.z = speed * tan(steering_angle) / wheelbase`
 
-转换为 Gazebo 原生 Ackermann 插件需要的 `geometry_msgs/msg/Twist`，这样以后接真实车底盘时可以替换适配层而保留上层循迹逻辑。
+转换为 Gazebo 原生 Ackermann 插件需要的 `geometry_msgs/msg/Twist`，这样以后接真实车
+底盘时可以替换适配层而保留上层循迹逻辑。
