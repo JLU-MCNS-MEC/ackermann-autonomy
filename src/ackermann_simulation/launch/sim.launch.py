@@ -46,6 +46,7 @@ def generate_launch_description() -> LaunchDescription:
     target_speed = LaunchConfiguration('target_speed')
     enable_ackermann_adapter = LaunchConfiguration('enable_ackermann_adapter')
     enable_rgbd = LaunchConfiguration('enable_rgbd')
+    enable_render_sensors = LaunchConfiguration('enable_render_sensors')
     max_speed = LaunchConfiguration('max_speed')
     max_acceleration = LaunchConfiguration('max_acceleration')
     max_deceleration = LaunchConfiguration('max_deceleration')
@@ -60,6 +61,7 @@ def generate_launch_description() -> LaunchDescription:
             Command([
                 'xacro ', robot_description_file,
                 ' enable_rgbd:=', enable_rgbd,
+                ' enable_render_sensors:=', enable_render_sensors,
             ]),
             value_type=str,
         ),
@@ -283,6 +285,14 @@ def generate_launch_description() -> LaunchDescription:
                 'enable_rgbd',
                 default_value='true',
                 description='Spawn the RGB-D sensor; disable it when unused.',
+            ),
+            DeclareLaunchArgument(
+                'enable_render_sensors',
+                default_value='true',
+                description=(
+                    'Spawn camera and GPU lidar sensors; disable for '
+                    'CPU-only physics testing.'
+                ),
             ),
             DeclareLaunchArgument(
                 'ground_truth_tf_output',

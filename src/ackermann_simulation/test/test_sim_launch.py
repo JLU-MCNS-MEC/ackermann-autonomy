@@ -18,6 +18,7 @@ def test_sim_launch_exposes_stationary_mode():
         'enable_line_follower',
         'enable_waypoint_nav',
         'enable_rgbd',
+        'enable_render_sensors',
         'start_x',
         'start_y',
         'gz_args',
@@ -33,6 +34,16 @@ def test_sim_launch_exposes_stationary_mode():
         'control_rate',
         'ground_truth_tf_output',
     } <= names
+
+
+def test_joystick_launch_keeps_manual_control_separate_from_nav2():
+    path = Path(__file__).parents[1] / 'launch' / 'joystick_sim.launch.py'
+    text = path.read_text(encoding='utf-8')
+    assert "package='joy'" in text
+    assert "executable='joy_to_ackermann'" in text
+    assert "'enable_line_follower': 'false'" in text
+    assert "'enable_waypoint_nav': 'false'" in text
+    assert "DeclareLaunchArgument('deadman_button', default_value='5')" in text
 
 
 def test_sim_launch_uses_mid360_scan_and_pointcloud_bridge():

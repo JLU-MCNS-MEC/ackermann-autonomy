@@ -43,6 +43,7 @@ setup(
             'line_follower = ackermann_autonomy.line_follower_node:main',
             'ackermann_to_twist = ackermann_autonomy.ackermann_to_twist_node:main',
             'twist_to_ackermann = ackermann_autonomy.twist_to_ackermann_node:main',
+            'joy_to_ackermann = ackermann_autonomy.joy_to_ackermann_node:main',
             'waypoint_tracker = ackermann_autonomy.waypoint_tracker_node:main',
             'nav2_waypoint_sender = ackermann_autonomy.nav2_waypoint_sender:main',
             'ackermann_dynamics_test = ackermann_autonomy.dynamics_test_node:main',

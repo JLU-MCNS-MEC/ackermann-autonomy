@@ -2,6 +2,7 @@
 <robot name="ackermann_car" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <xacro:arg name="enable_rgbd" default="true"/>
+  <xacro:arg name="enable_render_sensors" default="true"/>
 
   <!-- Keep these dimensions in one place so another chassis can reuse the controller. -->
   <xacro:property name="pi_value" value="3.141592653589793"/>
@@ -215,6 +216,7 @@
     <mu2>1.5</mu2>
   </gazebo>
 
+  <xacro:if value="$(arg enable_render_sensors)">
   <gazebo reference="camera_link">
     <sensor name="front_camera" type="camera">
       <always_on>true</always_on>
@@ -316,6 +318,7 @@
         </camera>
       </sensor>
     </gazebo>
+  </xacro:if>
   </xacro:if>
 
   <!-- Gazebo Sim's native Ackermann system is model-name agnostic at runtime. -->

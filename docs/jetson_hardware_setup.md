@@ -7,14 +7,13 @@
 排查。驱动接口与安全要求见
 [`ackermann_hardware/README.md`](../src/ackermann_hardware/README.md)。
 
-## 1. 运行环境限制
+## 1. 运行环境
 
-本工程建立在 ROS 2 Jazzy 上，包内使用了 Python 3.10 以上的类型注解语法。Jetson AGX
-Xavier 能升级到的最高系统是 JetPack 5.1.7（Ubuntu 20.04），对应 ROS 2 发行版 Foxy
-且已停止维护。因此底盘驱动目前不能直接运行在这台 Jetson 上。
-
-本文描述的全部内容属于硬件层，与该限制无关：接线、CAN 接口启用、PWM 输出和自检工具
-都已经在真机验证。真机运行方案（桥接、容器或移植）尚未确定。
+本工程建立在 ROS 2 Jazzy 上，包内使用了 Python 3.10 以上的类型注解语法。Jetson 的
+系统 ROS/Python 不满足要求；当前采用 RoboStack 隔离环境提供 Python 3.12 与 ROS 2
+Jazzy，路径为 `/home/huituo/robostack-test/env`，工程工作区为
+`/home/huituo/robostack-test/ws`。2026-10-14 已完成四个实机包构建、51 项硬件与
+bringup 测试以及 5/5 硬件自检。不要从系统 Python 导入该环境的 ROS 包。
 
 ## 2. 40 针接口映射
 

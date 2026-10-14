@@ -1,6 +1,6 @@
 # 工程状态与会话交接
 
-更新时间：2026-10-13。
+更新时间：2026-10-14。
 
 ## 工程重命名与分层
 
@@ -12,7 +12,7 @@
 - 当前不拆成两个 GitHub 仓库。只有驱动需要独立版本/权限、被多个项目复用、受 SDK
   许可证约束或已有独立硬件在环测试时，再拆出硬件驱动仓库。详细边界见
   [`architecture.md`](architecture.md)。
-- 当前 5 包在系统 Python 独立安装空间构建成功；全量 193 项测试通过，0 errors、
+- 当前 5 包在系统 Python 独立安装空间构建成功；全量 225 项测试通过，0 errors、
   0 failures、0 skipped。硬件包单元测试覆盖率 87%。
 
 ## Jetson 实车底盘驱动
@@ -26,7 +26,8 @@
   `/chassis_driver/enable`；300 ms 命令 watchdog 会令轮速归零并逐步回正。
 - Python 性能满足当前 20–50 Hz 目标下发与反馈读取；电机速度硬实时闭环仍在
   DS20270C 内部完成。独立硬件急停、驱动心跳与 Jetson 实时调度仍是必要安全层。
-- 本机只完成构建、mock CAN/PWM 单元测试和 launch 契约验证。
+- 本机完成构建、mock CAN/PWM 单元测试和 launch 契约验证；Jetson 上的实机包也已在
+  RoboStack Jazzy 环境完成构建和 51 项硬件/bringup 测试。
 - 2026-10-13 在真实 AGX Xavier 上完成硬件层验证：`mttcan` 模块存在但开机不加载；
   参考载板设备树已正确配置 CAN0 与 PWM pinmux，实测无需 Jetson-IO；`can0` 可配置到
   500 kbps 并进入 `ERROR-ACTIVE`；PWM 控制器 `32c0000.pwm` 对应 `pwmchip2` 与引脚 18，
@@ -38,9 +39,26 @@
   改为 root 感知并补齐模块预检、接口出现检查与收发器提示。
 - 仍待台架验收：总线实际连通性、左右轮方向、舵机中位、负载反馈语义与实车里程计，
   不能标记为实车完成。
-- 已确认的阻塞：本包是 ROS 2 Jazzy 包且使用 Python 3.10 以上的类型注解语法，而目标
-  Jetson 最高只能到 JetPack 5.1.7（Ubuntu 20.04，对应已停止维护的 ROS 2 Foxy），
-  因此驱动目前无法直接运行在该机器上，真机运行方案尚未确定。
+- 2026-10-14 已用 RoboStack 在现有 JetPack 上建立隔离的 Python 3.12 / ROS 2 Jazzy
+  环境 `/home/huituo/robostack-test/env`，工程部署到
+  `/home/huituo/robostack-test/ws`。实机四包构建成功，`hardware_preflight` 为 5/5：
+  CAN `ERROR-ACTIVE`、TX/RX 错误计数均为 0，PWM 控制器及免 sudo 权限正常。尚未启动
+  `chassis_driver` 或使能电机，车轮方向、舵机中位和负载反馈仍必须在离地台架验收。
+
+## Xbox 手柄仿真控制
+
+- 新增 `joy_to_ackermann`：左摇杆纵轴控制前后速度、横轴控制转角，默认按住 RB
+  （button 5）才允许输出；松开 RB、手柄数据超过 250 ms 或报文布局错误都会发布停车。
+- 新增 `joystick_sim.launch.py`，将手柄控制与 Nav2/循迹控制隔离，避免多个控制器同时
+  发布。实测识别 `/dev/input/js0` 的 Xbox Series X Controller；等价手柄报文使车辆从
+  原点移动到约 `(0.548, 0.100) m`，停止后速度和转角均自动归零。
+- 驱动映射为“按住 RB + 左摇杆”：上下控制前进/倒车，左右控制转向。正常图形环境下
+  运行 `ros2 launch ackermann_simulation joystick_sim.launch.py`；该入口不启动 Nav2，
+  RViz 的目标点工具只显示标记，不会与手柄争抢控制权。
+- 本机 NVIDIA 内核模块为 580.173.02、用户态库为 580.178.04，Gazebo GUI/Ogre2
+  当前会崩溃。RViz 通过强制 Mesa 可正常显示；关闭渲染传感器后，Gazebo 物理服务器、
+  手柄链路和 RViz 联调通过。重启本机使内核加载 580.178.04 后，再恢复 Gazebo GUI、
+  GPU lidar 和相机的完整可视化验收。
 
 ## 当前可视化会话与最新验收
 

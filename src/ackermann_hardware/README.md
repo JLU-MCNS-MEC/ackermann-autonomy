@@ -5,10 +5,20 @@ Jetson AGX Xavier 上的 ROS 2 Python 底盘驱动。它使用原生 SocketCAN �
 
 ## 运行环境
 
-本包是 ROS 2 Jazzy 包，并使用 Python 3.10 以上的类型注解语法。Jetson AGX Xavier
-能升级到的最高系统为 JetPack 5.1.7（Ubuntu 20.04），其对应的 ROS 2 发行版 Foxy 已停止
-维护，因此本包目前不能直接运行在该 Jetson 上。真机运行需要桥接、容器或移植方案，
-尚未确定；硬件层的接线、自检与 CAN 配置与本限制无关，已经可用。
+本包是 ROS 2 Jazzy 包，并使用 Python 3.10 以上的类型注解语法。目标 Jetson 的系统
+Python 与 ROS 版本不满足要求，因此使用 RoboStack 隔离环境提供 Python 3.12 和 ROS 2
+Jazzy。2026-10-14 已在 `/home/huituo/robostack-test/env` 构建成功，工作区位于
+`/home/huituo/robostack-test/ws`；不要与系统 ROS/Python 混用。
+
+远端命令可通过 micromamba 的隔离执行入口运行，例如：
+
+```bash
+/home/huituo/robostack-test/bin/micromamba run \
+  -r /home/huituo/robostack-test/mamba-root \
+  -p /home/huituo/robostack-test/env bash -c \
+  'cd /home/huituo/robostack-test/ws && source install/setup.bash && \
+   ros2 run ackermann_hardware hardware_preflight'
+```
 
 驱动订阅 `/drive` 的 `ackermann_msgs/msg/AckermannDriveStamped`，发布：
 
