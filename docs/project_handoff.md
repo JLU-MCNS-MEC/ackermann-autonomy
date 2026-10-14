@@ -60,6 +60,18 @@
   手柄链路和 RViz 联调通过。重启本机使内核加载 580.178.04 后，再恢复 Gazebo GUI、
   GPU lidar 和相机的完整可视化验收。
 
+### 2026-10-14 重启恢复点
+
+1. 先运行 `nvidia-smi`，确认不再报告 driver/library version mismatch。
+2. 进入 `/home/xqiao/Workspace/ackermann_ros2_ws`，执行
+   `source /opt/ros/jazzy/setup.zsh && source install/setup.zsh`。
+3. 连接 Xbox 手柄后执行
+   `ros2 launch ackermann_simulation joystick_sim.launch.py`；按住 RB 并使用左摇杆驾驶。
+4. 确认 Gazebo GUI、RViz、`/clock`、`/model/ackermann_car/odometry` 正常后，再恢复
+   `indoor_semantic.launch.py use_rviz:=true enable_rgbd:=false` 的完整导航可视化测试。
+5. Jetson 已部署到 `/home/huituo/robostack-test/ws`，重启本机不会影响远端部署；实车
+   电机仍保持未使能，禁止跳过离地台架验收。
+
 ## 当前可视化会话与最新验收
 
 - 已定位“空旷处路径绕远”：代价地图直线路径代价均为 0，主要原因是 RViz 精确目标
